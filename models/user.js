@@ -28,14 +28,13 @@ const userSchema = Schema(
     owner: {
       type: Schema.Types.ObjectId,
       ref: 'user',
-      required: true,
     },
   },
   { versionKey: false, timestamps: true }
 );
 
 const userJoiSchema = Joi.object({
-  email: Joi.string().pattern(emailRegexp).required(),
+  email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
 });
 

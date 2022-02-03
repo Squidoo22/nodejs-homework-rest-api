@@ -12,7 +12,7 @@ const { authMiddleware } = require('../../middlewares');
 
 const router = express.Router();
 
-router.post('signup', async (req, res, next) => {
+router.post('/signup', async (req, res, next) => {
   try {
     const { error } = schemas.user.validate(req.body);
     if (error) {
@@ -38,13 +38,16 @@ router.post('signup', async (req, res, next) => {
 
 router.post('/login', async (req, res, next) => {
   try {
+    console.log(req.body);
     const { error } = schemas.user.validate(req.body);
+
     if (error) {
       throw new CreateError(400, error.message);
     }
     const { email, password } = req.body;
     const user = User.findOne({ email });
     const comparePassword = await bcrypt.compare(password, user.password);
+
     if (!user || !comparePassword) {
       throw new CreateError(401, 'Email or password is wrong');
     }
@@ -99,4 +102,4 @@ router.patch('/', authMiddleware, async (req, res, next) => {
   }
 });
 
-router.module.exports = router;
+module.exports = router;
