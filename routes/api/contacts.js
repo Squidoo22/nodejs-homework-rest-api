@@ -5,16 +5,25 @@ const { Contact, schemas } = require('../../models/contact');
 
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
+const { authMiddleware } = require('../../middlewares');
+
+router.get('/', authMiddleware, async (req, res, next) => {
   try {
-    const contacts = await Contact.find({});
+    const { page = 1, limit = 20, favorite = true } = req.query;
+    const skip = (page - 1) * limit;
+    const { _id } = req.user;
+    const contacts = await Contact.find(
+      { owner: _id, favorite },
+      '-createdAt - updatedAt',
+      { skip, limit: Number(limit) }
+    ).populate('owner', 'email');
     res.json(contacts);
   } catch (e) {
     next(e);
   }
 });
 
-router.get('/:contactId', async (req, res, next) => {
+router.get('/:contactId', authMiddleware, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const contact = await Contact.findById(contactId);
@@ -27,7 +36,7 @@ router.get('/:contactId', async (req, res, next) => {
   }
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/', authMiddleware, async (req, res, next) => {
   try {
     const { error } = schemas.joiShema.validate(req.body);
     if (error) throw new CreateError(400, 'missing required name field');
@@ -42,7 +51,7 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-router.put('/:contactId', async (req, res, next) => {
+router.put('/:contactId', authMiddleware, async (req, res, next) => {
   try {
     const { error } = schemas.joiShema.validate(req.body);
     if (error) throw new CreateError(400, error.message);
@@ -56,7 +65,7 @@ router.put('/:contactId', async (req, res, next) => {
   }
 });
 
-router.patch('/:contactId/favorite', async (req, res, next) => {
+router.patch('/:contactId/favorite', authMiddleware, async (req, res, next) => {
   try {
     const { error } = schemas.joiShema.validate();
     if (error) throw new CreateError(400, error.message);
@@ -74,7 +83,7 @@ router.patch('/:contactId/favorite', async (req, res, next) => {
   }
 });
 
-router.delete('/:contactId', async (req, res, next) => {
+router.delete('/:contactId', authMiddleware, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const deleteContact = await Contact.findByIdAndDelete(contactId);
