@@ -1,8 +1,7 @@
 const { Schema, model } = require('mongoose');
 const Joi = require('joi');
 
-const emailRegexp =
-  /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const emailRegexp = /^\w+([\.-]?\w+)+@\w+([\.:]?\w+)+(\.[a-zA-Z0-9]{2,3})+$/;
 
 const userSchema = Schema(
   {
@@ -16,7 +15,7 @@ const userSchema = Schema(
       unique: true,
       match: emailRegexp,
     },
-    subscribiton: {
+    subscription: {
       type: String,
       enum: ['starter', 'pro', 'business'],
       default: 'starter',
@@ -29,19 +28,29 @@ const userSchema = Schema(
       type: Schema.Types.ObjectId,
       ref: 'user',
     },
+    avatarURL: {
+      type: String,
+      default: '',
+    },
   },
   { versionKey: false, timestamps: true }
 );
 
-const userJoiSchema = Joi.object({
-  email: Joi.string().email().required(),
+const registerJoiSchema = Joi.object({
+  email: Joi.string().pattern(emailRegexp).required(),
   password: Joi.string().min(6).required(),
+  subscription: Joi.string(),
+});
+const updateSubscriptionJoiSchema = Joi.object({
+  _id: Joi.string(),
+  subscription: Joi.string().valid('starter', 'pro', 'business'),
 });
 
 const User = model('user', userSchema);
 
 const schemas = {
-  user: userJoiSchema,
+  register: registerJoiSchema,
+  updateSubscription: updateSubscriptionJoiSchema,
 };
 
 module.exports = {
